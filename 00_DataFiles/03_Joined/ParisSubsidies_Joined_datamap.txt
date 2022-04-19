@@ -1,0 +1,27 @@
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 79961 entries, 0 to 79967
+Data columns (total 20 columns):
+ #   Column                                           Non-Null Count  Dtype			Description         
+---  ------                                           --------------  -----         		-------------
+ 0   Numéro de dossier                                79961 non-null  object        		Uniquely identifies a subsidy request
+ 1   Année budgétaire                                 79961 non-null  int64         		Budget year (2013-2021)
+ 2   Numéro Siret                                     79961 non-null  object        		Uniquely identifies non-profit organisation
+ 3   Objet du dossier                                 79961 non-null  object        		Description of subsidy request
+ 4   Montant voté                                     79961 non-null  int64         		Amount granted by Paris City Council (in EUR)
+ 5   Direction                                        79961 non-null  object        		Paris City Council service in charge of processing the subsidy request
+ 6   Nature de la subvention                          79961 non-null  object        		Fonctionnement, Projet, Investissement, Non précisée
+ 7   Secteurs d'activités définies par l'association  79961 non-null  object       		Non-profit organisation self-declared domains
+ 8   categorieentreprise                              79961 non-null  category      		Non productif < PME < ETI < GE for statistical analysis
+ 9   geolocetablissement                              79961 non-null  object        		[Latitude, Longitude] geolocation of non-profit organisation
+ 10  trancheeffectifsunitelegale                      79961 non-null  category      		Number of employees range (ordered)
+ 11  trancheeffectifsunitelegaletriable               79961 non-null  float64       		Short key to select / order trancheeffectifsunitelegale
+ 12  siretsiegeunitelegale                            79961 non-null  object        		Uniquely identifies mother organisation of non-profit organisation
+ 13  etablissementsiege                               79961 non-null  float64       		Tells whether non-profit organisation is its own mother
+ 14  codepostaletablissement                          79961 non-null  object        		Postal code of non-profit organisation for geo-stastistical analysis
+ 15  caractereemployeurunitelegale                    79961 non-null  float64       		Whether the non-profit organisation can have employees or not
+ 16  datecreationunitelegale                          79961 non-null  datetime64[ns]		Creation date of mother organisation
+ 17  datecreationetablissement                        79961 non-null  datetime64[ns]		Creation date of non-profit organisation
+ 18  denominationunitelegale                          79961 non-null  object        		Name of non-profit organisation
+ 19  adresseetablissementcomplete                     79961 non-null  object        		Address of non-profit organisation (for hover effects)
+dtypes: category(1), datetime64[ns](2), float64(3), int64(2), object(12)
+memory usage: 12.3+ MB
