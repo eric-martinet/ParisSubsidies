@@ -49,3 +49,6 @@ Temporary Items
 
 # ADDITIONAL: TABLEAU DESKTOP TEMP WORKBOOKS
 .~*.twbr
+
+# ADDITIONAL: TEMP FOLDERS
+*/.temp/*
