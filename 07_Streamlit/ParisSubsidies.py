@@ -1,4 +1,5 @@
 # STREAMLIT APP
+from scipy.fft import dct
 import streamlit as st
 st.set_page_config()
 
@@ -12,6 +13,14 @@ import plotly.colors
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+# NLP
+import spacy
+import string
+from unidecode import unidecode
+
+# ML loading
+from joblib import load
 
 # FUNCTIONS
 def safe_num(num):
@@ -27,6 +36,17 @@ def format_number(num):
         num /= 1000.0
     return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
+def clean_text(text ): 
+    delete_dict = {sp_character: '' for sp_character in string.punctuation} 
+    delete_dict[' '] = ' ' 
+    table = str.maketrans(delete_dict)
+    text1 = text.translate(table)
+    textArr= text1.split()
+    text2 = ' '.join([w for w in textArr if ( not w.isdigit() and  ( not w.isdigit() and len(w)>3))]) 
+    text2 = unidecode(text2)
+    
+    return text2.lower()
+
 # DATA IMPORT
 @st.cache
 def data_import():
@@ -38,14 +58,21 @@ data = data_import()
 # TITLE
 st.title('Paris Subsidies', anchor = 'title')
 #st.sidebar.markdown("[Top](#title)", unsafe_allow_html=True)
+st.markdown('''
+    This is my final project for the Data Analytics bootcamp I did in Feb-Apr 2022 at [IronHack](https://www.ironhack.com/fr/data-analytics/paris) in Paris.
+
+    Using public open data only, it aims at visualising and analysing the subsidies granted by Paris City Council to non-profit organisations, following the [Five Ws principle](https://en.wikipedia.org/wiki/Five_Ws).
+
+    You can find all datafiles, Jupyter notebooks and python scripts as well as the source code of this app on our [GitHub repo](https://github.com/eric-martinet/ParisSubsidies).
+''')
 
 st.markdown("""---""")
 
 # BUSINESS CASE
 st.header('Business case', anchor = 'business_case')
 st.markdown('''
-***Who*** is distributing Paris City Council's subsidies? ***What*** causes is Paris City Council likely to support?
-***When*** are these subsidies granted? ***Where*** do they go (i.e. to what associations)? ***Why*** does a non-profit organisation receive a subsididy while another one does not?
+***Who*** is granting Paris City Council's subsidies? ***What*** causes is Paris City Council likely to support?
+***When*** are these subsidies granted? ***Where*** do they go? ***Why*** does a non-profit organisation receive a subsididy while another one does not?
 
 The answers we aim at providing to these questions should be of interest to:
 - Parisian citizens and taxpayers who want to understand where they taxmoney goes
@@ -69,7 +96,7 @@ To form our dataset, we have combined data from four sources:
 ''')
 
 # ...under the hood...
-with st.expander('Under the hood'):
+with st.expander('Under the hood...'):
     st.markdown('''
     The SIRENE V3 consolidée enriches INSEE's SIRENE data with labels, hierarchies, geocoordinates, etc.
     It also has the huge benefit of having non-restrictive API usage (as long as it remains reasonable) while INSEE's SIRENE soon requires you to pay.
@@ -95,7 +122,7 @@ with col3:
     st.metric(label = 'Analysed period', value = period)
 
 # ...under the hood...
-with st.expander('Under the hood'):
+with st.expander('Under the hood...'):
     st.markdown('''
     The original number of records present in the Open Data Paris dataset was 80,084.
 
@@ -142,7 +169,7 @@ with col3:
 
 
 # ...under the hood...
-with st.expander('Under the hood'):
+with st.expander('Under the hood...'):
     st.markdown('''
     In total, it is more than 2.4B€ worth of subsidies that we have analysed over 2013-2021, granted to about 6,800 different associations.
     ''')
@@ -205,7 +232,7 @@ However, in terms of total amounts, most of the money goes to project above 100k
 ''')
 
 # ...under the hood...
-with st.expander('Under the hood'):
+with st.expander('Under the hood...'):
     st.markdown('''
     Given the range of distributed amounts, we used a log10 scale to group the subsidies by size.
     ''')
@@ -549,7 +576,7 @@ def geo_paris_idf_beyond_1_10k():
 fig = geo_paris_idf_beyond_1_10k()
 
 # ...under the hood...
-with st.expander('Under the hood'):
+with st.expander('Under the hood...'):
     st.plotly_chart(fig)
     st.caption('''
     Even if we limit the analysis to the 1-10k EUR subsidy range, Paris City Council essentially grants money to Paris-based associations.
@@ -632,7 +659,7 @@ def map_reject():
 fig = map_reject()
 
 # ...under the hood...
-with st.expander('Under the hood'):
+with st.expander('Under the hood...'):
     st.write('And where are located those that get rejected more than 50% of the time?')
 
     st.plotly_chart(fig)
@@ -645,9 +672,216 @@ with st.expander('Under the hood'):
 st.markdown('---')
 
 # MACHINE LEARNING
-st.header('Machine learning', anchor = 'machine_learning')
+st.header('Machine learning: trying to predict the success of a request!', anchor = 'machine_learning')
 
 st.write('Let\'s do a bit of machine learning to assess whether we can predict if a subsidy request is likely to get accepted or not.')
 
+# Data pre-processing & Pipeline
+st.subheader('Pipeline')
+st.write('They say that an image is worth 1,000 words.')
+
+st.image('../06_ML/ML_Pipeline.png')
+
+st.markdown('Wait... ***NLP***? Indeed! In our dataset, we have the description of each request. We used NLP (Spacy librairy) to score the description - the higher the (probabilistic) score, the higher the chance to get a subsidy, *ceteris paribus*...')
+
+# ...under the hood...
+with st.expander('Under the hood...'):
+    st.write('''
+    Apart from NLP applied on the request description, the rest (feature selection, enrichment, encoding) was pretty straightforward.
+
+    Features originally in the dataset include Direction, associations' self-declared domainfields, subsidy's nature, geo-coordinates.
+
+    We enriched them with features such as: Did the association already apply for a subsidy previously? Was it a success? How old was the association at the time of application?
+    And of course the NLP scoring.
+
+    In terms of encoding, dummy & binary proved to be the best ways to proceed. NLP scoring was the only continuous variable.
+    ''')
+
 # First model
-st.subheader('First model: trying to predict success of request')
+st.subheader('First try')
+st.write('We selected the features, encoded them, check for collinearility, split between train and test, fit a Decision Tree Classifier, and... bam.')
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric(label = 'Accuracy (on test data)', value = '92.6%')
+with col2:
+    st.metric(label = 'Recall (on test data)', value = '93.8%')
+with col3:
+    st.metric(label = 'Precision (on test data)', value = '94.0%')
+
+st.markdown('***WAY too good to be true...*** :scream:')
+
+with st.expander('Under the hood...'):
+    st.write('We also tried a Support Vector Classification and a Logistic Regressor: same results!')
+
+# Reflecting on the first model
+st.subheader('Reflecting on the first model')
+st.markdown('''
+    What's wrong here? It is because of the feature 'nature_subvention', which can take 4 values: investissement, projet, fonctionnement, non précisée.
+    Looking at feature importance, these fields are very dominant in the model.
+    
+    We originally assumed that this was something declared by the association (the documentation did not say a word about it). Actually it appears that this is a field filled by Paris City's services.
+    
+    And if a subsidy is rejected, they do not bother with this field (it is probably linked with public accounting rules).
+''')
+
+@st.cache
+def nb_requests_reject_rate_by_nature():
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Dataframes
+    gb = data.groupby('nature_subvention').agg(nb_dossiers = ('numero_dossier', 'count'))
+    ct = pd.crosstab(data.nature_subvention, data.subsidy_granted_bool, normalize='index').reindex(gb.index)
+
+    # Add traces
+    fig.add_trace(
+        go.Bar(x=gb.index, y=gb.nb_dossiers, name='Number of requests'),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(x=ct.index, y=ct[False], name='Reject rate'),
+        secondary_y=True,
+    )
+
+    # Layout
+    fig.update_layout(
+        title_text='<b>Number of requests & Reject rate by Nature</b>',
+        showlegend = False,
+        hovermode='x unified',
+    )
+
+    # Set x-axis title
+    fig.update_xaxes(title_text='<b>Nature</b>')
+
+    # Set y-axes titles
+    fig.update_yaxes(title_text='<b>Number</b> of requests', color = '#636EFA', secondary_y=False)
+    fig.update_yaxes(title_text='<b>Reject</b> rate', color='#EF553B', showgrid = False, tickformat = '.1%', secondary_y=True)
+
+    return fig
+
+# ...under the hood...
+with st.expander('Under the hood...'):
+    fig = nb_requests_reject_rate_by_nature()
+    st.plotly_chart(fig)
+    st.write('''
+    Now it is pretty obvious!
+    ''')
+
+# Second model
+st.subheader('Second try')
+st.write('''
+    We took out the nature_subvention-related fields.
+    We also took out other features that eventually appeared to be not important, such as the direction.
+    We ended with only four groups fo features: NLP scoring, existence & success of previous request, localisation in Paris or not, and associations's self-declared fields of activities.
+
+    After bit of :wrench: hyperparameter tuning (GridSearch )...
+''')
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric(label = 'Accuracy (on test data)', value = '67.4%')
+with col2:
+    st.metric(label = 'Recall (on test data)', value = '84.4%')
+with col3:
+    st.metric(label = 'Precision (on test data)', value = '69.0%')
+
+st.markdown('Not *TOO* bad... and anyway we did not get any better despite looooong hours :persevere: on this.')
+st.markdown(':deciduous_tree: Let\'s plot the tree.')
+
+st.image('../06_ML/dtc.png')
+
+st.markdown('''
+    Clearly the NLP score is the most important feature. Not a surprise considering that it has been prefit to predict the success of the request!
+
+    But this tree also shows that you are more likely to get a subsidy if the previous one was successful.
+    We get a better model by factoring in this feature than just with NLP.
+''')
+ 
+with st.expander('Under the hood...'):
+    st.write('Again, we also used a Logistic Regressor and a Support Vector Classification models, with basically the same results.')
+
+# Sandbox
+st.subheader('Sandbox: test your request!')
+st.write('Please input your request below, and we will tell you if you can hope for a subsidy from Paris City Council!')
+st.markdown(':exclamation: :exclamation: :exclamation: *FOR ENTERTAINMENT PURPOSES ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!*')
+
+
+with st.form('Your subsidy request'):
+    objet_dossier = st.text_input(label = 'Request description', value = 'un jardin partagé pour les enfants et les personnes âgées')
+    secteurs_activites = st.multiselect(label = 'Fields of activities',
+                                        options = ['culture_et_arts', 'education_et_formation', 'loisirs', 'precarite_et_exclusion', 'social', 'sport', 'vie_et_animation_locale'],
+                                        default = ['culture_et_arts', 'social']
+                                        )
+    paris = st.checkbox(label = 'Association located in Paris?', value = True)
+    previous_request_success = st.radio(label = 'Was your last subsidy request (if any) successful?',
+                                        options = ['First request', 'Last request was not successful', 'Last request was successful']
+                                        )
+    submit_button = st.form_submit_button(label='Submit')
+
+@st.cache
+def assess_request(objet_dossier, secteurs_activites, paris, previous_request_success):
+    
+    dct_request_test = {
+        'nlp_scoring':'',
+        'culture_et_arts':'0',
+        'education_et_formation':'0',
+        'loisirs':'0',
+        'precarite_et_exclusion':'0',
+        'social':'0',
+        'sport':'0',
+        'vie_et_animation_locale':'0',
+        'paris':'0',
+        'previous_request_success':'0',
+        'objet_dossier':''
+    }
+
+    dct_request_test['objet_dossier']=objet_dossier
+    dct_request_test['paris']= 1 if paris else 0
+
+    if previous_request_success == 'First request':
+        dct_request_test['previous_request_success'] = -1
+    elif previous_request_success == 'Last request was not successful':
+        dct_request_test['previous_request_success'] = 0
+    else:
+        dct_request_test['previous_request_success'] = 1
+
+    if secteurs_activites:
+        for s in secteurs_activites:
+            dct_request_test[s] = 1
+
+    dtc_best = load('../06_ML/dtc_best.joblib')
+    nlp_textcat = spacy.load('../05_NLP/textcat_output/model-best')
+    dct_request_test['nlp_scoring'] = nlp_textcat(clean_text(dct_request_test['objet_dossier'])).cats['yes']
+    df_request = pd.DataFrame.from_dict(dct_request_test, orient = 'index').T
+    return dtc_best.predict_proba(df_request.drop(['objet_dossier'], axis = 1))
+
+with st.expander('Discover your result!'):
+    a = assess_request(objet_dossier, secteurs_activites, paris, previous_request_success)
+    st.write(a)
+
+st.markdown('---')
+
+# MACHINE LEARNING AMOUNT
+st.header('Let\'s be more ambitious! Can we predict the amount you can get?')
+st.markdown('''
+    
+    To try to achieve this, we need to perform additional data transformation, reduction, sampling, model selection:
+    - We focused only on the 1-10k EUR subsidy granted to Parisian association (56% of successful requests)
+    - We did not try to get an exact amount (using regression models), but a range (using classification models): 1-2k EUR, 3-5k EUR, 6-10k EUR
+    - We had to factor in imbalance using oversampling as the 6-10k EUR range was much less populated than the other ones
+    - Intuitively, associations that look alike should get the same kinds of amounts, so we decided to opt for the KNeighbors Classifier with hyperparameter tuning :wrench:
+''')
+
+with st.expander('And the result is...'):
+    st.image('../06_ML/knc.png')
+    st.caption('Confusion matrix on test data, normalised.')
+    st.write('Not very usable :confused: But it will be a good challenge for those willing to take it!')
+
+
+st.markdown('---')
+
+# FUN FACTS
+st.header('Fun facts')
+st.write('A collection of not-so-random facts from our dataset :smiley_cat:')
