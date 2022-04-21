@@ -74,7 +74,7 @@ st.sidebar.markdown('''
     - [Analysis by Direction](#eda-direction)
     - [Geo-analysis](#eda-geo)
 
-    [Machine learning: request success](#machine_learning)
+    [Machine learning: predict success](#machine_learning)
     - [Pipeline](#ml-pipeline)
     - [First try](#ml-1)
     - [Reflecting on first try](#ml-reflecting)
