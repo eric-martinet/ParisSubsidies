@@ -1,5 +1,4 @@
 # STREAMLIT APP
-import joblib
 from scipy.fft import dct
 import streamlit as st
 st.set_page_config()
