@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 
 # Data visualisation
+import plotly.colors
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -43,8 +44,8 @@ st.markdown("""---""")
 # BUSINESS CASE
 st.header('Business case', anchor = 'business_case')
 st.markdown('''
-***Who*** is benefiting from Paris City Council's subsidies? ***What*** causes is Paris City Council likely to support by granting financial aid?
-***When*** are these subsidies voted? ***Where*** do they go? ***Why*** does a non-profit organisation receive a subsididy while another one does not?
+***Who*** is distributing Paris City Council's subsidies? ***What*** causes is Paris City Council likely to support?
+***When*** are these subsidies granted? ***Where*** do they go (i.e. to what associations)? ***Why*** does a non-profit organisation receive a subsididy while another one does not?
 
 The answers we aim at providing to these questions should be of interest to:
 - Parisian citizens and taxpayers who want to understand where they taxmoney goes
@@ -199,10 +200,15 @@ def distribution_analysis():
 fig = distribution_analysis()
 st.plotly_chart(fig)
 st.caption('''
-Paris City Council was less and less selective from 2015 to 2018, and still below its medium-term average (39%) in 2019 and 2020.
-
-It never received so many requests as in 2021, but the reject rate soared: we can assume this is again the effect of the financial crisis induced by the covid-19 crisis.
+Paris City Council essentially grants subsidies in the 1-10k EUR range, but also process many between 10 and 100k EUR.
+However, in terms of total amounts, most of the money goes to project above 100k EUR and even 1M EUR.
 ''')
+
+# ...under the hood...
+with st.expander('Under the hood'):
+    st.markdown('''
+    Given the range of distributed amounts, we used a log10 scale to group the subsidies by size.
+    ''')
 
 
 # Analysis by Budget year
@@ -448,3 +454,200 @@ The DDCT (Direction de la Démocratie, des Citoyen.ne.s et des Territoires) is t
 
 Another important Direction we have not seen before is the DJS (Direction de la Jeunesse et des Sports). They distribute about 11M€ per year.
 ''')
+
+# Geo analysis
+st.subheader('Geo analysis')
+st.write('''
+Is Paris City Council essentially subsidising Parisian associations?
+''')
+
+@st.cache
+def geo_paris_idf_beyond():
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Dataframes
+    gb = data.groupby('geo_cat').agg(total_subsidies = ('montant_vote', 'sum')).sort_values(by='total_subsidies', ascending = False)
+    gb['avg_yearly_subsidies'] = gb.total_subsidies / nb_years
+    ct = pd.crosstab(data.geo_cat, data.subsidy_granted_bool, normalize='index').reindex(gb.index)
+
+    # Add traces
+    fig.add_trace(
+        go.Bar(x=gb.index, y=gb.avg_yearly_subsidies, name='Yearly subsidies (average)'),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(x=ct.index, y=ct[False], name='Reject rate'),
+        secondary_y=True,
+    )
+
+    # Layout
+    fig.update_layout(
+        title_text='<b>Yearly subsidies and Reject rate by Geography</b>',
+        showlegend = False,
+        hovermode='x unified',
+    )
+
+    # Set x-axis title
+    fig.update_xaxes(title_text='<b>Geography</b>')
+
+    # Set y-axes titles
+    fig.update_yaxes(title_text='<b>Yearly</b> subsidies', color = '#636EFA', secondary_y=False)
+    fig.update_yaxes(title_text='<b>Reject</b> rate', color='#EF553B', showgrid = False, tickformat = '.1%', secondary_y=True)
+
+    return fig
+
+fig = geo_paris_idf_beyond()
+st.plotly_chart(fig)
+st.caption('''
+96% of the subsidies go to associations headquartered in Paris (however this number includes para-public institutions and big subsidies).
+
+In addition, associations in Île-de-France and beyond are less likely to see their request accepted.
+''')
+
+
+
+@st.cache
+def geo_paris_idf_beyond_1_10k():
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Dataframes
+    data_red = data.loc[(data.montant_vote_scale == 3)]
+    gb = data_red.groupby('geo_cat').agg(total_subsidies = ('montant_vote', 'sum'), nb_requests = ('numero_dossier', 'count')).sort_values(by='total_subsidies', ascending = False)
+    gb['avg_yearly_subsidies'] = (gb.total_subsidies / nb_years).astype(int)
+    gb['avg_yearly_nb_requests'] = (gb.nb_requests / nb_years).astype(int)
+
+    # Add traces
+    fig.add_trace(
+        go.Bar(x=gb.index, y=gb.avg_yearly_subsidies, name='Yearly subsidies (average)'),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(x=gb.index, y=gb.avg_yearly_nb_requests, name='Number of requests'),
+        secondary_y=True,
+    )
+
+    # Layout
+    fig.update_layout(
+        title_text='<b>Yearly subsidies and Number of requests by Geography (1-10k range)</b>',
+        showlegend = False,
+        hovermode='x unified',
+    )
+
+    # Set x-axis title
+    fig.update_xaxes(title_text='<b>Geography</b>')
+
+    # Set y-axes titles
+    fig.update_yaxes(title_text='<b>Yearly</b> subsidies', color = '#636EFA', secondary_y=False)
+    fig.update_yaxes(title_text='<b>Number</b> of requests', color='#EF553B', showgrid = False, tickformat = '.0f', secondary_y=True)
+
+    return fig
+
+fig = geo_paris_idf_beyond_1_10k()
+
+# ...under the hood...
+with st.expander('Under the hood'):
+    st.plotly_chart(fig)
+    st.caption('''
+    Even if we limit the analysis to the 1-10k EUR subsidy range, Paris City Council essentially grants money to Paris-based associations.
+    ''')
+
+st.write('Where are located the Parisian-based associations? Let\'s look at those that got subsidies between 1 and 10k EUR.')
+
+@st.cache
+def map_1_10k():
+    # Dataframes
+    data_subset = data.loc[data.montant_vote_scale == 3]
+    top5_directions_subset = data_subset.groupby('direction').count().sort_values(by='numero_dossier', ascending = False).index.to_list()[0:5]
+    data_subset_top5_directions = data_subset.loc[data_subset.direction.isin(top5_directions_subset)]
+    df_map = data_subset_top5_directions.groupby(['siret', 'denomination_unite_legale', 'adresse_etablissement_complete', 'direction']).agg(lat = ('latitude','mean'), lon = ('longitude', 'mean'), total_subsidies = ('montant_vote', 'sum'))
+    df_map = df_map.reset_index(level=[1,2,3])
+
+
+    # Map
+
+    px.set_mapbox_access_token('pk.eyJ1IjoiZS10aW5lcmFudCIsImEiOiJjbDI5MmluZDIwZGU0M2NtZWZ3MGQ2NDdpIn0.HcxDw2oUG2RXOFRZrFyfLQ')
+    hover_data={'direction':True,
+                'total_subsidies':True,
+                'lat':False,
+                'lon':False,
+                'adresse_etablissement_complete':True
+                }
+    pt = plotly.colors.qualitative.Plotly
+    d3 = plotly.colors.qualitative.D3
+    colors = [d3[1], pt[0], d3[7], d3[5], pt[3]]
+    fig = px.scatter_mapbox(df_map, lat='lat', lon='lon', hover_name='denomination_unite_legale', hover_data=hover_data,zoom=3, color = 'direction', color_discrete_sequence=colors, height=500, size = 'total_subsidies')
+    fig.update_layout(mapbox=dict(bearing=0,center=go.layout.mapbox.Center(lat=48.8523647,lon=2.3482718),pitch=0,zoom=11))
+    fig.update_layout(mapbox_style = 'basic')
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+    return fig
+
+fig = map_1_10k()
+st.plotly_chart(fig)
+st.caption('''
+The size of the bubbles denotes the total amount of subsidies received (for subsidies in the 1-10k EUR range).
+
+We can observe that the DDCT, the DPVI and the DASES mostly support associations based in the 10th, 18th, 19th, and 20th arrondissements
+while the DJS is more present in the parts of the city built in the 1970s-1980s (as most sport equipments are located there).
+The 7th and the 16th arrondissement look quite empty.
+''')
+
+
+@st.cache
+def map_reject():
+    # Dataframes
+    top5_directions = data.groupby('direction').count().sort_values(by='numero_dossier', ascending = False).index.to_list()[0:5]
+    df_map = data.loc[data.direction.isin(top5_directions)]
+    df_map = df_map.groupby(['siret', 'denomination_unite_legale', 'adresse_etablissement_complete', 'direction'])
+    df_map = df_map.agg(lat = ('latitude','mean'), lon = ('longitude', 'mean'), nb_requests = ('numero_dossier', 'count'), nb_requests_success = ('subsidy_granted_bool', 'sum'))
+    df_map = df_map.reset_index(level=[1,2,3])
+    df_map['reject_rate'] = 1 - df_map.nb_requests_success / df_map.nb_requests
+    df_map = df_map.loc[df_map.reject_rate > 0.5]
+
+    # Map
+
+    px.set_mapbox_access_token('pk.eyJ1IjoiZS10aW5lcmFudCIsImEiOiJjbDI5MmluZDIwZGU0M2NtZWZ3MGQ2NDdpIn0.HcxDw2oUG2RXOFRZrFyfLQ')
+    hover_data={'direction':True,
+                'nb_requests':True,
+                'nb_requests_success':False,
+                'reject_rate':True,
+                'lat':False,
+                'lon':False,
+                'adresse_etablissement_complete':True
+                }
+    pt = plotly.colors.qualitative.Plotly
+    d3 = plotly.colors.qualitative.D3
+    colors = [d3[1], pt[0], d3[7], d3[5], pt[3]]
+    fig = px.scatter_mapbox(df_map, lat='lat', lon='lon', hover_name='denomination_unite_legale', hover_data=hover_data,zoom=3, color = 'direction', color_discrete_sequence=colors, height=500, size = 'nb_requests')
+    fig.update_layout(mapbox=dict(bearing=0,center=go.layout.mapbox.Center(lat=48.8523647,lon=2.3482718),pitch=0,zoom=11))
+    fig.update_layout(mapbox_style = 'basic')
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+    return fig
+
+fig = map_reject()
+
+# ...under the hood...
+with st.expander('Under the hood'):
+    st.write('And where are located those that get rejected more than 50% of the time?')
+
+    st.plotly_chart(fig)
+    st.caption('''
+    The size of the bubbles denotes the total amount of requests.
+
+    The 7th and the 16th arrondissement are not discriminated against: there is just no association requesting subsidies there!
+    ''')
+
+st.markdown('---')
+
+# MACHINE LEARNING
+st.header('Machine learning', anchor = 'machine_learning')
+
+st.write('Let\'s do a bit of machine learning to assess whether we can predict if a subsidy request is likely to get accepted or not.')
+
+# First model
+st.subheader('First model: trying to predict success of request')
