@@ -1,4 +1,5 @@
 # STREAMLIT APP
+import joblib
 from scipy.fft import dct
 import streamlit as st
 st.set_page_config()
@@ -20,7 +21,7 @@ import string
 from unidecode import unidecode
 
 # ML loading
-from joblib import load
+from joblib import dump, load
 
 # FUNCTIONS
 def safe_num(num):
@@ -55,10 +56,44 @@ def data_import():
 
 data = data_import()
 
+# SIDEBAR
+st.sidebar.markdown('''
+    ### NAVIGATION
+
+    [Back to top](#title)
+
+    [Business case](#business_case)
+
+    [Dataset](#dataset)
+    - [Sources](#dataset-sources)
+    - [Statistics](#dataset-statistics)
+
+    [EDA](#eda)
+    - [Key facts](#eda-key_facts)
+    - [Distribution analysis](#eda-distribution)
+    - [Analysis by Budget year](#eda-budget_year)
+    - [Analysis by Direction](#eda-direction)
+    - [Geo-analysis](#eda-geo)
+
+    [Machine learning: request success](#machine_learning)
+    - [Pipeline](#ml-pipeline)
+    - [First try](#ml-1)
+    - [Reflecting on first try](#ml-reflecting)
+    - [Second try](#ml-2)
+    - [Test your request!](#ml-test_request)
+
+    [Machine learning: predict amount](#ml_amount)
+
+    [Fun fact](#fun_facts)
+
+''', unsafe_allow_html=True)
+
 # TITLE
 st.title('Paris Subsidies', anchor = 'title')
-#st.sidebar.markdown("[Top](#title)", unsafe_allow_html=True)
+
 st.markdown('''
+    *by Eric Martinet, 22 April 2022*
+
     This is my final project for the Data Analytics bootcamp I did in Feb-Apr 2022 at [IronHack](https://www.ironhack.com/fr/data-analytics/paris) in Paris.
 
     Using public open data only, it aims at visualising and analysing the subsidies granted by Paris City Council to non-profit organisations, following the [Five Ws principle](https://en.wikipedia.org/wiki/Five_Ws).
@@ -70,6 +105,7 @@ st.markdown("""---""")
 
 # BUSINESS CASE
 st.header('Business case', anchor = 'business_case')
+
 st.markdown('''
 ***Who*** is granting Paris City Council's subsidies? ***What*** causes is Paris City Council likely to support?
 ***When*** are these subsidies granted? ***Where*** do they go? ***Why*** does a non-profit organisation receive a subsididy while another one does not?
@@ -86,7 +122,8 @@ st.markdown("""---""")
 st.header('Dataset', anchor = 'dataset')
 
 # Sources
-st.subheader('Sources')
+st.subheader('Sources', anchor='dataset-sources')
+
 st.markdown('''
 To form our dataset, we have combined data from four sources:
 - [Open Data Paris](https://opendata.paris.fr) where we downloaded subsidies requests
@@ -112,7 +149,7 @@ def dataset_statistics():
 
 dataset_size, nb_associations, period = dataset_statistics()
 
-st.subheader('Statistics')
+st.subheader('Statistics', anchor='dataset-statistics')
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label = 'Nb of records', value = f'{dataset_size:,}')
@@ -154,7 +191,8 @@ def key_facts():
 
 nb_years, avg_yearly_subsidies, avg_yearly_nb_requests, avg_reject_rate, max_subsidy, min_project_subsidy = key_facts()
 
-st.subheader('Key facts')
+st.subheader('Key facts', anchor='eda-key_facts')
+
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label = 'Avg yearly subsidies', value = format_number(avg_yearly_subsidies)+'€')
@@ -165,7 +203,6 @@ with col2:
 with col3:
     st.metric(label = 'Avg reject rate', value = f'{avg_reject_rate:.1%}')
     st.caption('Almost 4 out of 10 requests are rejected: what is the pattern?')
-
 
 
 # ...under the hood...
@@ -181,8 +218,9 @@ with st.expander('Under the hood...'):
         st.metric(label = 'Min subsidy', value = format_number(min_project_subsidy)+'€')
         st.caption('Granted to "Assocation Osadhi" in 2019 for the "Printemps des Cimetières".')
 
+
 # Distribution of subsidies
-st.subheader('Distribution analysis')
+st.subheader('Distribution analysis', anchor='eda-distribution')
 st.write('''The Budget year is the reference period for public accounting. 
 By law, each spending must be approved by Paris City Council and allocated to a specific Budget year.
 ''')
@@ -239,7 +277,7 @@ with st.expander('Under the hood...'):
 
 
 # Analysis by Budget year
-st.subheader('Analysis by Budget year')
+st.subheader('Analysis by Budget year', 'eda-budget_year')
 st.write('''The Budget year is the reference period for public accounting. 
 By law, each spending must be approved by Paris City Council and allocated to a specific Budget year.
 ''')
@@ -336,7 +374,7 @@ It never received so many requests as in 2021, but the reject rate soared: we ca
 ''')
 
 # Analysis by Direction
-st.subheader('Analysis by Service')
+st.subheader('Analysis by Direction', anchor='eda-direction')
 st.write('''
 Paris City has 27 different services or 'directions' (DAC: cultural affairs, DLH: housing, etc.) that manage and process subsidy granting.
 ''')
@@ -483,7 +521,7 @@ Another important Direction we have not seen before is the DJS (Direction de la 
 ''')
 
 # Geo analysis
-st.subheader('Geo analysis')
+st.subheader('Geo analysis', anchor='eda-geo')
 st.write('''
 Is Paris City Council essentially subsidising Parisian associations?
 ''')
@@ -677,7 +715,7 @@ st.header('Machine learning: trying to predict the success of a request!', ancho
 st.write('Let\'s do a bit of machine learning to assess whether we can predict if a subsidy request is likely to get accepted or not.')
 
 # Data pre-processing & Pipeline
-st.subheader('Pipeline')
+st.subheader('Pipeline', anchor = 'ml-pipeline')
 st.write('They say that an image is worth 1,000 words.')
 
 st.image('../06_ML/ML_Pipeline.png')
@@ -698,8 +736,8 @@ with st.expander('Under the hood...'):
     ''')
 
 # First model
-st.subheader('First try')
-st.write('We selected the features, encoded them, check for collinearility, split between train and test, fit a Decision Tree Classifier, and... bam.')
+st.subheader('First try', anchor='ml-1')
+st.write('We naively fitted a Decision Tree Classifier model (as we imagined it is very close to the way human beings will take a decision in this context), and... BAM.')
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -715,7 +753,7 @@ with st.expander('Under the hood...'):
     st.write('We also tried a Support Vector Classification and a Logistic Regressor: same results!')
 
 # Reflecting on the first model
-st.subheader('Reflecting on the first model')
+st.subheader('Reflecting on the first model', anchor='ml-reflecting')
 st.markdown('''
     What's wrong here? It is because of the feature 'nature_subvention', which can take 4 values: investissement, projet, fonctionnement, non précisée.
     Looking at feature importance, these fields are very dominant in the model.
@@ -770,7 +808,7 @@ with st.expander('Under the hood...'):
     ''')
 
 # Second model
-st.subheader('Second try')
+st.subheader('Second try', anchor='ml-2')
 st.write('''
     We took out the nature_subvention-related fields.
     We also took out other features that eventually appeared to be not important, such as the direction.
@@ -787,7 +825,7 @@ with col2:
 with col3:
     st.metric(label = 'Precision (on test data)', value = '69.0%')
 
-st.markdown('Not *TOO* bad... and anyway we did not get any better despite looooong hours :persevere: on this.')
+st.markdown('Not *TOO* bad... and anyway the results did not get any better despite looooong hours :persevere: fine-tuning the whole pipeline.')
 st.markdown(':deciduous_tree: Let\'s plot the tree.')
 
 st.image('../06_ML/dtc.png')
@@ -802,13 +840,14 @@ st.markdown('''
 with st.expander('Under the hood...'):
     st.write('Again, we also used a Logistic Regressor and a Support Vector Classification models, with basically the same results.')
 
-# Sandbox
-st.subheader('Sandbox: test your request!')
+# Test your request
+st.subheader('Sandbox: test your request!', anchor='ml-test_request')
 st.write('Please input your request below, and we will tell you if you can hope for a subsidy from Paris City Council!')
-st.markdown(':exclamation: :exclamation: :exclamation: *FOR ENTERTAINMENT PURPOSES ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!*')
+st.markdown(':exclamation: :exclamation: :exclamation: *FOR ENTERTAINMENT PURPOSES ONLY* :exclamation: :exclamation: :exclamation:')
 
 
 with st.form('Your subsidy request'):
+    model = st.radio(label = 'Machine Learning Model', options = ['Decision Tree Classifier', 'Logistic Regressor'])
     objet_dossier = st.text_input(label = 'Request description', value = 'un jardin partagé pour les enfants et les personnes âgées')
     secteurs_activites = st.multiselect(label = 'Fields of activities',
                                         options = ['culture_et_arts', 'education_et_formation', 'loisirs', 'precarite_et_exclusion', 'social', 'sport', 'vie_et_animation_locale'],
@@ -821,7 +860,7 @@ with st.form('Your subsidy request'):
     submit_button = st.form_submit_button(label='Submit')
 
 @st.cache
-def assess_request(objet_dossier, secteurs_activites, paris, previous_request_success):
+def assess_request(objet_dossier, secteurs_activites, paris, previous_request_success, model):
     
     dct_request_test = {
         'nlp_scoring':'',
@@ -851,20 +890,45 @@ def assess_request(objet_dossier, secteurs_activites, paris, previous_request_su
         for s in secteurs_activites:
             dct_request_test[s] = 1
 
-    dtc_best = load('../06_ML/dtc_best.joblib')
+    if model == 'Decision Tree Classifier':
+        model = load('../06_ML/dtc_best.joblib')
+    else:
+        model = load('../06_ML/lr.joblib')
+
     nlp_textcat = spacy.load('../05_NLP/textcat_output/model-best')
     dct_request_test['nlp_scoring'] = nlp_textcat(clean_text(dct_request_test['objet_dossier'])).cats['yes']
     df_request = pd.DataFrame.from_dict(dct_request_test, orient = 'index').T
-    return dtc_best.predict_proba(df_request.drop(['objet_dossier'], axis = 1))
+    return model.predict_proba(df_request.drop(['objet_dossier'], axis = 1))[0][1], dct_request_test['nlp_scoring']
+
+assessment, nlp_scoring = assess_request(objet_dossier, secteurs_activites, paris, previous_request_success, model)
+
+try:
+    [prev_assessment, prev_nlp_scoring] = joblib.load('prev_scores.joblib')
+except:
+    prev_assessment, prev_nlp_scoring = assessment, nlp_scoring
+
+dump([assessment, nlp_scoring], 'prev_scores.joblib')
 
 with st.expander('Discover your result!'):
-    a = assess_request(objet_dossier, secteurs_activites, paris, previous_request_success)
-    st.write(a)
+    if assessment > 0.5:
+        st.markdown('Your request is likely to be accepted! :thumbsup:')
+    else:
+        st.markdown('Well, maybe not this time... :cry:')
+
+with st.expander('The magic numbers'):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(label = 'Model score', value = f'{assessment:.0%}', delta = f'{assessment - prev_assessment: .0%}')
+        st.caption('Overall model probability to see your request accepted.')
+    with col2:
+        st.metric(label = 'NLP score', value = f'{nlp_scoring:.0%}', delta = f'{nlp_scoring - prev_nlp_scoring: .0%}')
+        st.caption('Sweet spot is above 61%, and above 54% if your previous request was successful.')
+    st.write('Note that being in Paris or not, and the fields of activities, have absolutely impact with the Decision Tree Classifier. It is different with the Logistic Regressor.')
 
 st.markdown('---')
 
 # MACHINE LEARNING AMOUNT
-st.header('Let\'s be more ambitious! Can we predict the amount you can get?')
+st.header('Let\'s be more ambitious! Can we predict the amount?', anchor='ml_amount')
 st.markdown('''
     
     To try to achieve this, we need to perform additional data transformation, reduction, sampling, model selection:
@@ -876,12 +940,12 @@ st.markdown('''
 
 with st.expander('And the result is...'):
     st.image('../06_ML/knc.png')
-    st.caption('Confusion matrix on test data, normalised.')
-    st.write('Not very usable :confused: But it will be a good challenge for those willing to take it!')
+    st.caption('Confusion matrix on test data, normalised. Colors by the artist.')
+    st.write('Not very usable due to significant confusion :confused: But it will be a good challenge for those willing to take it!')
 
 
 st.markdown('---')
 
 # FUN FACTS
-st.header('Fun facts')
+st.header('Fun facts', anchor = 'fun_facts')
 st.write('A collection of not-so-random facts from our dataset :smiley_cat:')
