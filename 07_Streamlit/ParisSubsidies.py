@@ -1,5 +1,5 @@
 # STREAMLIT APP
-from scipy.fft import dct
+#from scipy.fft import dct
 import streamlit as st
 st.set_page_config()
 
@@ -108,8 +108,7 @@ st.markdown("""---""")
 st.header('Business case', anchor = 'business_case')
 
 st.markdown('''
-:euro: :euro: :euro:
-***Who*** is granting Paris City Council's subsidies? ***What*** fields and activities is Paris City Council likely to support?
+:euro: ***Who*** is granting Paris City Council's subsidies? ***What*** fields and activities is Paris City Council likely to support?
 ***When*** are these subsidies granted? ***Where*** do they go? ***Why*** does a non-profit organisation receive a subsididy while another one does not?
 
 The answers we aim at providing to these questions should be of interest to:
