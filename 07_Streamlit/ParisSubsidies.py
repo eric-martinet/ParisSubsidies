@@ -82,7 +82,8 @@ st.sidebar.markdown('''
     - [First try](#ml-1)
     - [Reflecting on first try](#ml-reflecting)
     - [Second try](#ml-2)
-    - [Test your request!](#ml-test_request)
+    
+    :slot_machine: [SANDBOX: Test your request!](#sandbox) :slot_machine:
 
     [Machine learning: predict amount](#ml_amount)
 
@@ -90,7 +91,7 @@ st.sidebar.markdown('''
 
     [Follow-up ideas](#follow_up)
 
-''', unsafe_allow_html=True)
+''')
 
 # TITLE
 st.title('Paris Subsidies', anchor = 'title')
@@ -106,7 +107,7 @@ st.markdown('''
 ''')
 
 st.subheader('TL;DR')
-st.markdown('Wanna check if your subsidy request has a chance to get through at Paris City Council? You can directly go to the :slot_machine: [SANDBOX](#ml-test_request) :slot_machine:')
+st.markdown('Wanna check if your subsidy request has a chance to get through at Paris City Council? You can directly go to the :slot_machine: [SANDBOX](#sandbox) :slot_machine:')
 
 st.markdown("""---""")
 
@@ -851,8 +852,10 @@ st.markdown('''
 with st.expander('Under the hood...'):
     st.write('Again, we also used a Logistic Regressor and a Support Vector Classification models, with basically the same results.')
 
+st.markdown('---')
+
 # Test your request
-st.subheader('Sandbox: test your request!', anchor='ml-test_request')
+st.header('Sandbox: test your request!', anchor='sandbox')
 st.write('Please input your request below, and we will tell you if you can hope for a subsidy from Paris City Council!')
 st.markdown('And if you do want to apply afterwards: [Demandes de subventions sur paris.fr](#https://www.paris.fr/pages/les-demandes-de-subventions-5334) ')
 st.markdown(':exclamation: :exclamation: :exclamation: *FOR ENTERTAINMENT PURPOSES ONLY* :exclamation: :exclamation: :exclamation:')
