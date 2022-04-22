@@ -93,7 +93,7 @@ st.sidebar.markdown('''
 st.title('Paris Subsidies', anchor = 'title')
 
 st.markdown('''
-    *by :bowtie: Eric Martinet, 22 April 2022*
+    *by :male-student: Eric Martinet, 22 April 2022*
 
     This is my final project for the Data Analytics bootcamp I did in Feb-Apr 2022 at [IronHack](https://www.ironhack.com/fr/data-analytics/paris) in Paris.
 
@@ -108,7 +108,8 @@ st.markdown("""---""")
 st.header('Business case', anchor = 'business_case')
 
 st.markdown('''
-***Who*** is granting Paris City Council's subsidies? ***What*** causes is Paris City Council likely to support?
+:euro: :euro: :euro:
+***Who*** is granting Paris City Council's subsidies? ***What*** fields and activities is Paris City Council likely to support?
 ***When*** are these subsidies granted? ***Where*** do they go? ***Why*** does a non-profit organisation receive a subsididy while another one does not?
 
 The answers we aim at providing to these questions should be of interest to:
@@ -171,7 +172,7 @@ with st.expander('Under the hood...'):
     Could we have save time by dropping the other 300+ records? Yes, but we would have lost some valuable information about specific segments of our dataset: for instance, most of the incorrect records were related to amateur theater troupes.
 
     Our cleaned and enriched data is under [MIT license](https://raw.githubusercontent.com/eric-martinet/ParisSubsidies/main/LICENSE) so feel free to reuse it.
-    Avaialble formats in our [GitHub repo](https://github.com/eric-martinet/ParisSubsidies) are CSV (for universality) and Feather (for performance).
+    Avaialble formats in our [GitHub repo](https://github.com/eric-martinet/ParisSubsidies) are :1234: CSV (for universality) and :feather: Feather (for performance).
     ''')
 
 st.markdown("""---""")
@@ -200,16 +201,16 @@ with col1:
     st.caption('This is about 3% of Paris\' yearly budget (1OB€).')
 with col2:
     st.metric(label = 'Avg yearly nb of requests', value = f'{avg_yearly_nb_requests:,}')
-    st.caption('i.e. one every hour, including the night!')
+    st.caption('i.e. one every hour (including nighthours!)')
 with col3:
     st.metric(label = 'Avg reject rate', value = f'{avg_reject_rate:.1%}')
-    st.caption('Almost 4 out of 10 requests are rejected: what is the pattern?')
+    st.caption('Almost 4 out of 10 requests are rejected! Is there a pattern?')
 
 
 # ...under the hood...
 with st.expander('Under the hood...'):
     st.markdown('''
-    In total, it is more than 2.4B€ worth of subsidies that we have analysed over 2013-2021, granted to about 6,800 different associations.
+    In total, it is more than 2.4B€ worth of subsidies that we have analysed over 2013-2021, granted to about 6,800 different associations (about 4,000 additional applied at least once but did not succeed).
     ''')
     col1, col2 = st.columns(2)
     with col1:
@@ -657,9 +658,10 @@ st.plotly_chart(fig)
 st.caption('''
 The size of the bubbles denotes the total amount of subsidies received (for subsidies in the 1-10k EUR range).
 
-We can observe that the DDCT, the DPVI and the DASES mostly support associations based in the 10th, 18th, 19th, and 20th arrondissements
+We can observe that the DDCT, the DPVI (Délégation à la politique de la ville et à l'intégration) and the DASES (Direction de l'Action Sociale de l'Enfance et de la Santé) mostly support associations based in the 10th, 18th, 19th, and 20th arrondissements
 while the DJS is more present in the parts of the city built in the 1970s-1980s (as most sport equipments are located there).
-The 7th and the 16th arrondissement look quite empty.
+
+We also note that the 7th and the 16th arrondissement look quite empty.
 ''')
 
 
@@ -721,12 +723,15 @@ st.write('They say that an image is worth 1,000 words.')
 
 st.image('../06_ML/ML_Pipeline.png')
 
-st.markdown('Wait... ***NLP***? Indeed! In our dataset, we have the description of each request. We used NLP (Spacy librairy) to score the description - the higher the (probabilistic) score, the higher the chance to get a subsidy, *ceteris paribus*...')
+st.markdown('Wait... ***NLP***? Indeed! In our dataset, we have the description of each request. We used NLP (Spacy librairy) to score the description - the higher the (probabilistic) score, the higher the chance to get a subsidy, *ceteris paribus*.')
 
 # ...under the hood...
 with st.expander('Under the hood...'):
     st.write('''
-    Apart from NLP applied on the request description, the rest (feature selection, enrichment, encoding) was pretty straightforward.
+    For NLP, we first pre-processed the data with cleaning (special characters, cases, accents), reduction (stopwords), and lemmatisation.
+    We then trained and fine-tuned a predictive model - a process which is quite intensive computationally speaking.
+
+    Apart from NLP, the rest (feature selection, enrichment, encoding) was pretty straightforward.
 
     Features originally in the dataset include Direction, associations' self-declared domainfields, subsidy's nature, geo-coordinates.
 
