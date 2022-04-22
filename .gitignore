@@ -51,4 +51,4 @@ Temporary Items
 .~*.twbr
 
 # ADDITIONAL: PREVIOUS SCORING
-.prev_scores.joblib
+prev_scores.joblib
