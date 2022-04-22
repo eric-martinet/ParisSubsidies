@@ -20,6 +20,7 @@ import string
 from unidecode import unidecode
 
 # ML loading
+import joblib
 from joblib import dump, load
 
 # FUNCTIONS
