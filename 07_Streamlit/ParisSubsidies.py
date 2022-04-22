@@ -1,5 +1,4 @@
 # STREAMLIT APP
-#from scipy.fft import dct
 import streamlit as st
 st.set_page_config()
 
@@ -13,6 +12,9 @@ import plotly.colors
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+pt = plotly.colors.qualitative.Plotly
+d3 = plotly.colors.qualitative.D3
 
 # NLP
 import spacy
@@ -404,7 +406,8 @@ def subsidies_by_direction():
 
 
     # Pie chart
-    fig = go.Figure(data=[go.Pie(labels=gb.index, values=gb.avg_yearly_subsidies, textinfo='label+percent', sort = False, pull=[0,0,0,0,0,0.1])])
+    colors = [pt[0], pt[6], pt[7], pt[8], pt[9], pt[5]]
+    fig = go.Figure(data=[go.Pie(labels=gb.index, values=gb.avg_yearly_subsidies, textinfo='label+percent', marker_colors = colors,sort = False, pull=[0,0,0,0,0,0.1])])
 
     # Layout
     fig.update_layout(
@@ -457,7 +460,8 @@ def nb_requests_by_direction():
     gb.set_index('index', inplace = True)
 
     # Pie chart
-    fig = go.Figure(data=[go.Pie(labels=gb.index, values=gb.avg_yearly_nb_requests, textinfo='label+percent', sort = False, pull=[0,0,0,0,0,0.1])])
+    colors = [pt[0], pt[6], pt[7], pt[8], pt[9], pt[5]]
+    fig = go.Figure(data=[go.Pie(labels=gb.index, values=gb.avg_yearly_nb_requests, marker_colors = colors, textinfo='label+percent', sort = False, pull=[0,0,0,0,0,0.1])])
 
     # Layout
     fig.update_layout(
@@ -643,9 +647,7 @@ def map_1_10k():
                 'lon':False,
                 'adresse_etablissement_complete':True
                 }
-    pt = plotly.colors.qualitative.Plotly
-    d3 = plotly.colors.qualitative.D3
-    colors = [d3[1], pt[0], d3[7], d3[5], pt[3]]
+    colors = [d3[1], pt[0], d3[7], d3[2], pt[8]]
     fig = px.scatter_mapbox(df_map, lat='lat', lon='lon', hover_name='denomination_unite_legale', hover_data=hover_data,zoom=3, color = 'direction', color_discrete_sequence=colors, height=500, size = 'total_subsidies')
     fig.update_layout(mapbox=dict(bearing=0,center=go.layout.mapbox.Center(lat=48.8523647,lon=2.3482718),pitch=0,zoom=11))
     fig.update_layout(mapbox_style = 'basic')
@@ -689,7 +691,7 @@ def map_reject():
                 }
     pt = plotly.colors.qualitative.Plotly
     d3 = plotly.colors.qualitative.D3
-    colors = [d3[1], pt[0], d3[7], d3[5], pt[3]]
+    colors = [d3[1], pt[0], d3[7], d3[2], pt[8]]
     fig = px.scatter_mapbox(df_map, lat='lat', lon='lon', hover_name='denomination_unite_legale', hover_data=hover_data,zoom=3, color = 'direction', color_discrete_sequence=colors, height=500, size = 'nb_requests')
     fig.update_layout(mapbox=dict(bearing=0,center=go.layout.mapbox.Center(lat=48.8523647,lon=2.3482718),pitch=0,zoom=11))
     fig.update_layout(mapbox_style = 'basic')
@@ -852,10 +854,9 @@ st.write('Please input your request below, and we will tell you if you can hope 
 st.markdown('And if you do want to apply afterwards: [Demandes de subventions sur paris.fr](#https://www.paris.fr/pages/les-demandes-de-subventions-5334) ')
 st.markdown(':exclamation: :exclamation: :exclamation: *FOR ENTERTAINMENT PURPOSES ONLY* :exclamation: :exclamation: :exclamation:')
 
-
 with st.form('Your subsidy request'):
     model = st.radio(label = 'Machine Learning Model', options = ['Decision Tree Classifier', 'Logistic Regressor'])
-    objet_dossier = st.text_input(label = 'Request description', value = 'un jardin partagé pour les enfants et les personnes âgées')
+    objet_dossier = st.text_input(label = 'Request description', value = 'un jardin partagé pour les enfants et les personnes âgées', height = 1)
     secteurs_activites = st.multiselect(label = 'Fields of activities',
                                         options = ['culture_et_arts', 'education_et_formation', 'loisirs', 'precarite_et_exclusion', 'social', 'sport', 'vie_et_animation_locale'],
                                         default = ['culture_et_arts', 'social']
@@ -865,6 +866,7 @@ with st.form('Your subsidy request'):
                                         options = ['First request', 'Last request was not successful', 'Last request was successful']
                                         )
     submit_button = st.form_submit_button(label='Submit')
+
 
 @st.cache
 def assess_request(objet_dossier, secteurs_activites, paris, previous_request_success, model):
@@ -906,6 +908,7 @@ def assess_request(objet_dossier, secteurs_activites, paris, previous_request_su
     dct_request_test['nlp_scoring'] = nlp_textcat(clean_text(dct_request_test['objet_dossier'])).cats['yes']
     df_request = pd.DataFrame.from_dict(dct_request_test, orient = 'index').T
     return model.predict_proba(df_request.drop(['objet_dossier'], axis = 1))[0][1], dct_request_test['nlp_scoring']
+
 
 assessment, nlp_scoring = assess_request(objet_dossier, secteurs_activites, paris, previous_request_success, model)
 
@@ -1024,6 +1027,7 @@ with st.expander('Click to see the result'):
         st.metric(label = 'Number of companies', value = '{:,}'.format(df.siret.nunique()))
     with col2:
         st.metric(label = 'Companies\' requests success rate', value = '{:.1%}'.format(df.subsidy_granted_bool.sum()/df.shape[0]))
+
 
 st.markdown('---')
 
