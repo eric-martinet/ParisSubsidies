@@ -105,6 +105,9 @@ st.markdown('''
     You can find all datafiles, Jupyter notebooks and python scripts as well as the source code of this app on our [GitHub repo](https://github.com/eric-martinet/ParisSubsidies).
 ''')
 
+st.subheader('TL;DR')
+st.markdown('Wanna check if your subsidy request has a chance to get through at Paris City Council? You can directly go to the :slot_machine: [SANDBOX](#ml-test_request) :slot_machine:')
+
 st.markdown("""---""")
 
 # BUSINESS CASE
@@ -856,7 +859,7 @@ st.markdown(':exclamation: :exclamation: :exclamation: *FOR ENTERTAINMENT PURPOS
 
 with st.form('Your subsidy request'):
     model = st.radio(label = 'Machine Learning Model', options = ['Decision Tree Classifier', 'Logistic Regressor'])
-    objet_dossier = st.text_input(label = 'Request description', value = 'un jardin partagé pour les enfants et les personnes âgées', height = 1)
+    objet_dossier = st.text_input(label = 'Request description', value = 'un jardin partagé pour les enfants et les personnes âgées')
     secteurs_activites = st.multiselect(label = 'Fields of activities',
                                         options = ['culture_et_arts', 'education_et_formation', 'loisirs', 'precarite_et_exclusion', 'social', 'sport', 'vie_et_animation_locale'],
                                         default = ['culture_et_arts', 'social']
@@ -1036,7 +1039,7 @@ st.header('Follow-up ideas', anchor = 'follow_up')
 st.markdown('''
 A few ideas yet to be implemented...
 
-- Try to predict the amount! With the help of Teapot maybe?
+- Try to predict the amount! Maybe using :tea: [TPOT](http://automl.info/tpot/)?
 - Compare Paris with other big French cities (Lyon, Marseille, etc.): by law, they have to publish their subsidies.
 - Analyse subsidies to 'productive' entities (INSEE definition)
 
