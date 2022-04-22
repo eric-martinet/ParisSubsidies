@@ -85,13 +85,15 @@ st.sidebar.markdown('''
 
     [Fun fact](#fun_facts)
 
+    [Follow-up ideas](#follow_up)
+
 ''', unsafe_allow_html=True)
 
 # TITLE
 st.title('Paris Subsidies', anchor = 'title')
 
 st.markdown('''
-    *by Eric Martinet, 22 April 2022*
+    *by :bowtie: Eric Martinet, 22 April 2022*
 
     This is my final project for the Data Analytics bootcamp I did in Feb-Apr 2022 at [IronHack](https://www.ironhack.com/fr/data-analytics/paris) in Paris.
 
@@ -1018,6 +1020,18 @@ with st.expander('Click to see the result'):
     with col2:
         st.metric(label = 'Companies\' requests success rate', value = '{:.1%}'.format(df.subsidy_granted_bool.sum()/df.shape[0]))
 
-st.write('What are the top and worst description keywords?')
+st.markdown('---')
+
+# FOLLOW-UP IDEAS
+st.header('Follow-up ideas', anchor = 'follow_up')
+st.markdown('''
+A few ideas yet to be implemented...
+
+- Try to predict the amount! With the help of Teapot maybe?
+- Compare Paris with other big French cities (Lyon, Marseille, etc.): by law, they have to publish their subsidies.
+- Analyse subsidies to 'productive' entities (INSEE definition)
+
+:blush: :blush: :blush: THANK YOU!!! :blush: :blush: :blush:
+''')
 
 
