@@ -32,9 +32,8 @@ To answer the above questions, we need to:
 5. Synthetise insights and communicate them to the public through a [Streamlit](https://streamlit.io) app.
 
 ## Results
-Please find the main results on our [Streamlit app: Paris subsidies]()
+Please find the main results on our [Streamlit app: Paris subsidies](https://share.streamlit.io/eric-martinet/parissubsidies/main/07_Streamlit/ParisSubsidies.py)
 
-Note: the app will be accessible from Friday 22nd, April 2022 - stay tuned!
 
 ## Additional links
 - [Original repo](https://github.com/eric-martinet/ParisSubsidies)
