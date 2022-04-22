@@ -842,6 +842,7 @@ with st.expander('Under the hood...'):
 # Test your request
 st.subheader('Sandbox: test your request!', anchor='ml-test_request')
 st.write('Please input your request below, and we will tell you if you can hope for a subsidy from Paris City Council!')
+st.markdown('And if you do want to apply afterwards: [Demandes de subventions sur paris.fr](#https://www.paris.fr/pages/les-demandes-de-subventions-5334) ')
 st.markdown(':exclamation: :exclamation: :exclamation: *FOR ENTERTAINMENT PURPOSES ONLY* :exclamation: :exclamation: :exclamation:')
 
 
@@ -918,10 +919,10 @@ with st.expander('The magic numbers'):
     col1, col2 = st.columns(2)
     with col1:
         st.metric(label = 'Model score', value = f'{assessment:.0%}', delta = f'{assessment - prev_assessment: .0%}')
-        st.caption('Overall model probability to see your request accepted.')
+        st.caption('Overall model\'s predicted probability to see your request accepted. The higher the better!')
     with col2:
         st.metric(label = 'NLP score', value = f'{nlp_scoring:.0%}', delta = f'{nlp_scoring - prev_nlp_scoring: .0%}')
-        st.caption('Sweet spot is above 61%, and above 54% if your previous request was successful.')
+        st.caption('Score of your request description. The higher the better!')
     st.write('Note that being in Paris or not, and the fields of activities, have absolutely impact with the Decision Tree Classifier. It is different with the Logistic Regressor.')
 
 st.markdown('---')
@@ -948,3 +949,75 @@ st.markdown('---')
 # FUN FACTS
 st.header('Fun facts', anchor = 'fun_facts')
 st.write('A collection of not-so-random facts from our dataset :smiley_cat:')
+
+st.write('Who are the most subsidied associations over the 2013-2021 period?')
+with st.expander('Click to see the result'):
+    df = data.groupby('denomination_unite_legale').agg(total_subsidies = ('montant_vote', 'sum')).sort_values(by='total_subsidies', ascending = False).iloc[0:5]
+    df.rename(columns={'total_subsidy':'Total subsidies (EUR)'}, inplace = True)
+    st.write(df.style.format('{:,}'))
+
+st.write('Who is requesting subsidies from more than 10 different directions?')
+with st.expander('Click to see the result'):
+    df = data.loc[data.subsidy_granted_bool]
+    df = df.groupby('denomination_unite_legale')
+    df = df.agg(nb_directions = ('direction', 'nunique'), total_subsidies = ('montant_vote', 'sum'))
+    df = df.sort_values(by=['nb_directions', 'total_subsidies'], ascending = False)
+    df = df.loc[df.nb_directions >10]
+    df.rename(columns={'nb_directions':'Number of directions', 'total_subsidies':'Total subsidies (EUR)'}, inplace = True)
+    st.write(df.style.format('{:,}'))
+
+st.write('Who are the compulsive requesters?')
+with st.expander('Click to see the result'):
+    st.write('These associations apply for a subsidy more than twice a month in average (requests are not duplicates!)')
+    nb_months = nb_years * 12
+    df = data.groupby('denomination_unite_legale')
+    df = df.agg(nb_requests = ('numero_dossier', 'count'), nb_requests_success = ('subsidy_granted_bool', 'sum'), total_subsidies = ('montant_vote', 'sum'))
+    df['success_rate'] = df.nb_requests_success / df.nb_requests
+    df.drop('nb_requests_success', axis = 1, inplace = True)
+    df = df[['nb_requests','success_rate','total_subsidies']]
+    df.success_rate = df.success_rate.apply(lambda x: '{:.0%}'.format(x))
+    df = df.sort_values(by=['nb_requests', 'total_subsidies'], ascending = False)
+    df.total_subsidies = df.total_subsidies.apply(lambda x: '{:,}'.format(x))
+    df = df.loc[df.nb_requests >= nb_months * 2]
+    df.rename(columns={'nb_requests':'Number of requests', 'total_subsidies':'Total subsidies (EUR)', 'success_rate':'Success rate'}, inplace = True)
+    st.write(df)
+
+st.write('Who never gives up?')
+with st.expander('Click to see the result'):
+    st.write('Top 10 of associations that never got a subsidy despite multiple requests...')
+    df = data.loc[data.subsidy_granted_bool == False]
+    df = data.groupby('denomination_unite_legale')
+    df = df.agg(nb_requests = ('numero_dossier', 'count'), nb_requests_success = ('subsidy_granted_bool', 'sum'))
+    df['success_rate'] = df.nb_requests_success / df.nb_requests
+    df.success_rate = df.success_rate.apply(lambda x: '{:.0%}'.format(x))
+    df = df.sort_values(by='nb_requests', ascending = False)
+    df = df.loc[df.nb_requests_success == 0]
+    df.drop('nb_requests_success', axis = 1, inplace = True)
+    df.rename(columns={'nb_requests':'Number of requests', 'success_rate':'Success rate'}, inplace = True)
+    st.write(df.head(10))
+    st.markdown('Yes the first one is called \'TRAVAIL AU NOIR\' :joy_cat:')
+
+st.write('What about covid requests?')
+with st.expander('Click to see the result'):
+    st.write('Covid subsidies were granted in 2020 and 2021.')
+    df = data.loc[data.objet_dossier.str.contains('covid', case = False)]
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(label = 'Total covid-related subsidies (EUR)', value = format_number(df.montant_vote.sum()))
+    with col2:
+        st.metric(label = 'Covid-related requests success rate', value = '{:.1%}'.format(df.subsidy_granted_bool.sum()/df.shape[0]))
+
+st.write('How many different theatre companies are applying for subsidies?')
+with st.expander('Click to see the result'):
+    strings_to_match = ['theatre', 'théâtre', 'théatre', 'compagnie', 'cie', 'troupe']
+    match_pattern = fr"\b(?:{'|'.join(strings_to_match)})\b"
+    df = data.loc[(data.objet_dossier.str.contains(match_pattern, case = False))|(data.denomination_unite_legale.str.contains(match_pattern, case = False))]
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(label = 'Number of companies', value = '{:,}'.format(df.siret.nunique()))
+    with col2:
+        st.metric(label = 'Companies\' requests success rate', value = '{:.1%}'.format(df.subsidy_granted_bool.sum()/df.shape[0]))
+
+st.write('What are the top and worst description keywords?')
+
+
