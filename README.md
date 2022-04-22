@@ -14,7 +14,7 @@ Using public open data only, it aims at visualising and analysing the subsidies 
 The completion of this project has taken 4 days before being presented to a jury.
 
 ## Business case
-*Who* is distribution Paris City Council's subsidies? *What* causes is Paris City Council likely to support by granting financial aid? *When* are these subsidies granted? *Where* do they go? *Why* does a non-profit organisation receive a subsididy while another one does not?
+*Who* is distribution Paris City Council's subsidies? *What* fields and activities is Paris City Council likely to support? *When* are these subsidies granted? *Where* do they go? *Why* does a non-profit organisation receive a subsididy while another one does not?
 
 The answers we aim at providing to these questions should be of interest to:
 
