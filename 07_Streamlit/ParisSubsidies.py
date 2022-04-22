@@ -667,7 +667,7 @@ The size of the bubbles denotes the total amount of subsidies received (for subs
 We can observe that the DDCT, the DPVI (Délégation à la politique de la ville et à l'intégration) and the DASES (Direction de l'Action Sociale de l'Enfance et de la Santé) mostly support associations based in the 10th, 18th, 19th, and 20th arrondissements
 while the DJS is more present in the parts of the city built in the 1970s-1980s (as most sport equipments are located there).
 
-We also note that the 7th and the 16th arrondissement look quite empty.
+We also note that the 7th, the 8th and the 16th arrondissements look quite empty.
 ''')
 
 
@@ -713,7 +713,7 @@ with st.expander('Under the hood...'):
     st.caption('''
     The size of the bubbles denotes the total amount of requests.
 
-    The 7th and the 16th arrondissement are not discriminated against: there is just no association requesting subsidies there!
+    The 7th, the 8th and the 16th arrondissements are not discriminated against: there is just no association requesting subsidies there!
     ''')
 
 st.markdown('---')
